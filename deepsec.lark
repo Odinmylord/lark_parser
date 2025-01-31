@@ -1,0 +1,63 @@
+%import common.WS_INLINE
+%import common.NEWLINE
+%import common.WS
+%import common.C_COMMENT
+%ignore WS_INLINE
+%ignore NEWLINE
+%ignore WS
+%ignore C_COMMENT
+EQUALS : "="
+LPAR: "("
+RPAR: ")"
+COMMA: ","
+%ignore "//" /[^\n]/*
+%ignore "(*" /(.|NEWLINE)+?/s "*)"
+%ignore "/*" /(.|NEWLINE)+?/s "*/"
+start: statement+
+
+statement: constant
+         | function_declaration
+         | reduc_declaration
+         | query
+         | control_keyword
+         | assignment
+         | func_content
+         | condition
+
+constant: /\b[0-9]+\b/
+
+function_declaration: function_keyword NAME ("/" NUMBER|channel_declaration)? ("[" NAME "]")? "."
+channel_declaration: (COMMA NAME)*
+function_keyword: "fun" -> fun
+                  | "free" -> free
+                  | "const" -> const
+NAME: /[a-zA-Z_'][a-zA-Z0-9_']*/
+NUMBER: /\d+/
+
+reduc_declaration: "reduc" (reduc_name reduc_body | reduc_header)
+reduc_name: NAME func_content
+func_content: NAME? LPAR func_content (COMMA func_content)* RPAR | NAME
+reduc_body: ("->" NAME)* "."
+reduc_header: LPAR NAME RPAR "->" NAME
+
+query: "query" query_type
+query_type: "trace_equiv" | "trace_incl" | "session_equiv" | "session_incl"
+
+control_keyword: LPAR
+                | "in" -> in
+                | "out" -> out
+                | "if" -> if_statement
+                | "then" -> then
+                | "else" -> else_statement
+                | ";"  -> semicolon
+                | "."  -> dot
+                | "|"  -> pipe
+                | NUMBER 
+                | RPAR
+
+assignment: "let" var_name (LPAR variable_list? RPAR)? EQUALS statement
+var_name: EQUALS? NAME | LPAR var_name (COMMA var_name)* RPAR
+variable_list: NAME (COMMA NAME)*
+value: /[^\n]+/
+
+condition: func_content EQUALS func_content
