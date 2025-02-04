@@ -17,20 +17,23 @@ start: statement+
 
 statement: constant
          | function_declaration
+         | channel_declaration
          | reduc_declaration
          | query
          | control_keyword
+         | LPAR
+         | RPAR
          | assignment
          | func_content
          | condition
 
 constant: /\b[0-9]+\b/
 
-function_declaration: function_keyword NAME ("/" NUMBER|channel_declaration)? ("[" NAME "]")? "."
-channel_declaration: (COMMA NAME)*
+function_declaration: function_keyword NAME ("/" NUMBER|(COMMA NAME)*)? ("[" NAME "]")? "."
+channel_declaration: channel_keyword NAME (COMMA NAME)* ("[" NAME "]")? "."
 function_keyword: "fun" -> fun
-                  | "free" -> free
-                  | "const" -> const
+                | "const" -> const
+channel_keyword: "free" -> free
 NAME: /[a-zA-Z_'][a-zA-Z0-9_']*/
 NUMBER: /\d+/
 
@@ -43,8 +46,7 @@ reduc_header: LPAR NAME RPAR "->" NAME
 query: "query" query_type
 query_type: "trace_equiv" | "trace_incl" | "session_equiv" | "session_incl"
 
-control_keyword: LPAR
-                | "in" -> in
+control_keyword: "in" -> in
                 | "out" -> out
                 | "if" -> if_statement
                 | "then" -> then
@@ -52,8 +54,7 @@ control_keyword: LPAR
                 | ";"  -> semicolon
                 | "."  -> dot
                 | "|"  -> pipe
-                | NUMBER 
-                | RPAR
+                | NUMBER
 
 assignment: "let" var_name (LPAR variable_list? RPAR)? EQUALS statement
 var_name: EQUALS? NAME | LPAR var_name (COMMA var_name)* RPAR
