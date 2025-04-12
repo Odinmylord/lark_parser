@@ -173,3 +173,8 @@ cython_debug/
 *.dps
 *.txt
 *.json
+
+# Added by cargo
+
+/target
+Cargo.lock

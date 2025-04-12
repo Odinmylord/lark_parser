@@ -17,6 +17,10 @@ class MessagesFinder(Visitor):
     _func_content_counter = 0
     _parenthesis_list = []
     _channels = set()
+    _channel_separator = "2"
+
+    def set_channel_separator(self, separator: str):
+        self._channel_separator = separator
 
     def assignment(self, tree):
         if self._current_process is None:
@@ -58,7 +62,8 @@ class MessagesFinder(Visitor):
                 if self._current_channel in self._channels:
                     message_dict = {
                         "statement": self._actual_statement,
-                        "channel": self._current_channel,
+                        "send_channel": self._current_channel.split(self._channel_separator)[0],
+                        "receive_channel": self._current_channel.split(self._channel_separator)[1],
                         "message": ""
                     }
                     self.add_message(message_dict)
@@ -77,20 +82,20 @@ class MessagesFinder(Visitor):
 
     def if_statement(self, _):
         self._current_channel = None
-        self.add_message({"if": []})
+        self.add_message({"if_statem": []})
         self._current_depth += 1
 
     def else_statement(self, _):
         self._current_channel = None
-        self.add_message({"else": []})
+        self.add_message({"else_statem": []})
         self._current_depth += 1
 
     def semicolon(self, _):
         self._current_channel = None
 
-    def constant(self, tree):
-        if self._current_process:
-            self.add_message(tree.children[0].value)
+    # def constant(self, tree):
+    #     if self._current_process:
+    #         self.add_message(tree.children[0].value)
 
     def output(self):
         return deepcopy(self._processes)
@@ -102,10 +107,10 @@ class MessagesFinder(Visitor):
         current_list = self._processes[self._current_process]
         if self._current_depth:
             for _ in range(self._current_depth):
-                if "if" in current_list[-1]:
-                    current_list = current_list[-1]["if"]
+                if "if_statem" in current_list[-1]:
+                    current_list = current_list[-1]["if_statem"]
                 else:
-                    current_list = current_list[-1]["else"]
+                    current_list = current_list[-1]["else_statem"]
         if isinstance(message, str) and message.isnumeric():
             current_list.append(message)
         elif isinstance(message, str):
